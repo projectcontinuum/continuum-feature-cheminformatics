@@ -1,5 +1,5 @@
 plugins {
-    id("org.projectcontinuum.feature-java")
+    id("org.projectcontinuum.feature-java") version "0.0.6"
 }
 
 group = "org.projectcontinuum.feature.example.java"
@@ -7,5 +7,5 @@ description = "Continuum Feature Hello Java — a sample Java feature module wit
 version = "0.0.1"
 
 continuum {
-    continuumVersion.set("0.0.6-SNAPSHOT")
+    continuumVersion.set("0.0.6")
 }

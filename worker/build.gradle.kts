@@ -1,5 +1,5 @@
 plugins {
-    id("org.projectcontinuum.worker")
+    id("org.projectcontinuum.worker") version "0.0.6"
 }
 
 group = "org.projectcontinuum.app.worker.example"
@@ -7,7 +7,7 @@ description = "Continuum Feature Example Worker — Spring Boot worker applicati
 version = "0.0.1"
 
 continuum {
-    continuumVersion.set("0.0.6-SNAPSHOT")
+    continuumVersion.set("0.0.6")
 }
 
 dependencies {
