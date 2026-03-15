@@ -11,6 +11,5 @@ continuum {
 }
 
 dependencies {
-    implementation(project(":features:continuum-feature-hello"))
-    implementation(project(":features:continuum-feature-hello-java"))
+    implementation(project(":features:continuum-feature-rdkit"))
 }
