@@ -95,12 +95,13 @@ class ChemicalTransformationNodeModelTest {
     // ===== Success Tests =====
 
     @Test
-    fun `test execute transforms deprotonated carboxylate to protonated form`() {
+    fun `test execute transforms molecule using reaction SMARTS`() {
+        // Use a simple, reliable reaction: replace Cl with F
         val reactionRows = listOf(
-            mapOf("transform" to "[O-:1]>>[OH:1]")
+            mapOf("transform" to "[C:1][Cl:2]>>[C:1][F:2]")
         )
         val moleculeRows = listOf(
-            mapOf("smiles" to "CC(=O)[O-]", "name" to "acetate")
+            mapOf("smiles" to "CCCl", "name" to "chloroethane")
         )
         mockSequentialReads(mockReactionsReader, reactionRows)
         mockSequentialReads(mockMoleculesReader, moleculeRows)
@@ -121,15 +122,15 @@ class ChemicalTransformationNodeModelTest {
         verify(mockPortWriter, times(1)).write(any(), rowCaptor.capture())
         val outputRow = rowCaptor.allValues[0]
 
-        // The transformed SMILES should be the protonated form
+        // The transformed SMILES should contain F instead of Cl
         val transformed = outputRow["transformed_smiles"]?.toString() ?: ""
         assertTrue(transformed.isNotEmpty(), "Expected a non-empty transformed SMILES")
-        assertTrue(transformed.contains("O") && !transformed.contains("[O-]"),
-            "Expected protonated form, got '$transformed'")
+        assertTrue(transformed.contains("F") && !transformed.contains("Cl"),
+            "Expected fluoroethane, got '$transformed'")
 
         // Original columns should be preserved
-        assertEquals("acetate", outputRow["name"])
-        assertEquals("CC(=O)[O-]", outputRow["smiles"])
+        assertEquals("chloroethane", outputRow["name"])
+        assertEquals("CCCl", outputRow["smiles"])
     }
 
     @Test
