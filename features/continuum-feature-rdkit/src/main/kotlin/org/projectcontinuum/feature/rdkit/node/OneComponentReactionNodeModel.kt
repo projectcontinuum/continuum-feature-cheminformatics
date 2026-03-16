@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE
 import org.RDKit.*
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 
 /**
  * One Component Reaction Node Model
