@@ -1,40 +1,60 @@
 {
-    "id": "test-molecule-to-inchi-001",
-    "name": "Test Molecule to InChI Node",
+    "id": "b2b31514c2065b191734231037f380cca637c440918aa725e379cb3bdfef44c4",
+    "name": "/Users/L001418/Projects/Own/Project-Continuum/continuum-feature-cheminformatics/test-workflows/rdkit/01-converters/MoleculeToInChINodeModel/test-molecule-to-inchi.cwf",
     "active": false,
     "nodes": [
         {
             "id": "1",
             "type": "BaseNode",
-            "position": {"x": 100, "y": 200},
+            "position": {
+                "x": 100,
+                "y": 200
+            },
             "data": {
-                "id": "org.projectcontinuum.base.node.CreateTableNodeModel",
+                "id": "org.projectcontinuum.feature.base.analytics.node.CreateTableNodeModel",
                 "title": "Input Test Data",
                 "subTitle": "Create test SMILES",
-                "nodeModel": "org.projectcontinuum.base.node.CreateTableNodeModel",
+                "nodeModel": "org.projectcontinuum.feature.base.analytics.node.CreateTableNodeModel",
                 "inputs": null,
                 "outputs": {
-                    "data": {"name": "output table", "contentType": "application/octet-stream"}
+                    "data": {
+                        "name": "output table",
+                        "contentType": "application/octet-stream"
+                    }
                 },
                 "properties": {
                     "jsonArrayString": "[\n  {\"smiles\": \"c1ccccc1\", \"name\": \"benzene\"},\n  {\"smiles\": \"CCO\", \"name\": \"ethanol\"},\n  {\"smiles\": \"CC(=O)Oc1ccccc1C(=O)O\", \"name\": \"aspirin\"}\n]"
-                }
-            }
+                },
+                "description": "Input Test Data"
+            },
+            "width": 224,
+            "height": 100,
+            "selected": false,
+            "dragging": false
         },
         {
             "id": "2",
             "type": "BaseNode",
-            "position": {"x": 400, "y": 200},
+            "position": {
+                "x": 400,
+                "y": 200
+            },
             "data": {
                 "id": "org.projectcontinuum.feature.rdkit.node.MoleculeToInChINodeModel",
                 "title": "Molecule to InChI",
                 "subTitle": "Convert SMILES to InChI",
                 "nodeModel": "org.projectcontinuum.feature.rdkit.node.MoleculeToInChINodeModel",
                 "inputs": {
-                    "input": {"name": "input table", "contentType": "application/octet-stream"}
+                    "input": {
+                        "name": "input table",
+                        "contentType": "application/octet-stream"
+                    }
                 },
                 "outputs": {
-                    "output": {"name": "output table", "contentType": "application/octet-stream"}
+                    "output": {
+                        "name": "output table",
+                        "contentType": "application/octet-stream"
+                    }
                 },
                 "properties": {
                     "smilesColumn": "smiles",
@@ -42,42 +62,70 @@
                     "removeSourceColumn": false,
                     "generateInChIKey": true,
                     "inchiKeyColumnName": "inchi_key"
-                }
-            }
+                },
+                "description": "Molecule to InChI"
+            },
+            "width": 224,
+            "height": 100,
+            "selected": false,
+            "dragging": false
         },
         {
             "id": "3",
             "type": "BaseNode",
-            "position": {"x": 100, "y": 400},
+            "position": {
+                "x": 100,
+                "y": 400
+            },
             "data": {
-                "id": "org.projectcontinuum.base.node.CreateTableNodeModel",
+                "id": "org.projectcontinuum.feature.base.analytics.node.CreateTableNodeModel",
                 "title": "Expected Results",
                 "subTitle": "Expected InChI output",
-                "nodeModel": "org.projectcontinuum.base.node.CreateTableNodeModel",
+                "nodeModel": "org.projectcontinuum.feature.base.analytics.node.CreateTableNodeModel",
                 "inputs": null,
                 "outputs": {
-                    "data": {"name": "output table", "contentType": "application/octet-stream"}
+                    "data": {
+                        "name": "output table",
+                        "contentType": "application/octet-stream"
+                    }
                 },
                 "properties": {
                     "jsonArrayString": "[\n  {\"smiles\": \"c1ccccc1\", \"name\": \"benzene\", \"inchi\": \"InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H\"},\n  {\"smiles\": \"CCO\", \"name\": \"ethanol\", \"inchi\": \"InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3\"},\n  {\"smiles\": \"CC(=O)Oc1ccccc1C(=O)O\", \"name\": \"aspirin\", \"inchi\": \"InChI=1S/C9H8O4/c1-6(10)13-8-5-3-2-4-7(8)9(11)12/h2-5H,1H3,(H,11,12)\"}\n]"
-                }
-            }
+                },
+                "description": "Expected Results"
+            },
+            "width": 224,
+            "height": 100,
+            "selected": false,
+            "dragging": false
         },
         {
             "id": "4",
             "type": "BaseNode",
-            "position": {"x": 700, "y": 300},
+            "position": {
+                "x": 700,
+                "y": 300
+            },
             "data": {
                 "id": "org.projectcontinuum.feature.rdkit.node.SDFDifferenceCheckerNodeModel",
                 "title": "SDF Difference Checker",
                 "subTitle": "Verify InChI results",
                 "nodeModel": "org.projectcontinuum.feature.rdkit.node.SDFDifferenceCheckerNodeModel",
                 "inputs": {
-                    "left": {"name": "left table", "contentType": "application/octet-stream"},
-                    "right": {"name": "right table", "contentType": "application/octet-stream"}
+                    "left": {
+                        "name": "left table",
+                        "contentType": "application/octet-stream"
+                    },
+                    "right": {
+                        "name": "right table",
+                        "contentType": "application/octet-stream"
+                    }
                 },
                 "outputs": {
-                    "output": {"name": "comparison results", "contentType": "application/octet-stream"}
+                    "output": {
+                        "name": "comparison results",
+                        "contentType": "application/octet-stream"
+                    }
                 },
                 "properties": {
                     "leftSmilesColumn": "smiles",
@@ -87,8 +135,13 @@
                     "outputDifferencesOnly": false,
                     "differenceColumnName": "differences",
                     "matchColumnName": "match_status"
-                }
-            }
+                },
+                "description": "SDF Difference Checker"
+            },
+            "width": 224,
+            "height": 123,
+            "selected": false,
+            "dragging": false
         }
     ],
     "edges": [
@@ -118,4 +171,3 @@
         }
     ]
 }
-

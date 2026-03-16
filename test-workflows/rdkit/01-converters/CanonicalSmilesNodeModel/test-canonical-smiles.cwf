@@ -1,81 +1,129 @@
 {
-    "id": "test-canonical-smiles-001",
-    "name": "Test Canonical SMILES Node",
+    "id": "43fdbfc2b8602189dea386798672222961ce37ba0553425e4c75733710f25b32",
+    "name": "/Users/L001418/Projects/Own/Project-Continuum/continuum-feature-cheminformatics/test-workflows/rdkit/01-converters/CanonicalSmilesNodeModel/test-canonical-smiles.cwf",
     "active": false,
     "nodes": [
         {
             "id": "1",
             "type": "BaseNode",
-            "position": {"x": 100, "y": 200},
+            "position": {
+                "x": 100,
+                "y": 200
+            },
             "data": {
-                "id": "org.projectcontinuum.base.node.CreateTableNodeModel",
+                "id": "org.projectcontinuum.feature.base.analytics.node.CreateTableNodeModel",
                 "title": "Input Test Data",
                 "subTitle": "Create test molecules",
-                "nodeModel": "org.projectcontinuum.base.node.CreateTableNodeModel",
+                "nodeModel": "org.projectcontinuum.feature.base.analytics.node.CreateTableNodeModel",
                 "inputs": null,
                 "outputs": {
-                    "data": {"name": "output table", "contentType": "application/octet-stream"}
+                    "data": {
+                        "name": "output table",
+                        "contentType": "application/octet-stream"
+                    }
                 },
                 "properties": {
                     "jsonArrayString": "[\n  {\"smiles\": \"OC(=O)c1ccccc1OC(C)=O\", \"name\": \"aspirin\"},\n  {\"smiles\": \"c1ccccc1\", \"name\": \"benzene\"},\n  {\"smiles\": \"CC(C)Cc1ccc(C(C)C(=O)O)cc1\", \"name\": \"ibuprofen\"},\n  {\"smiles\": \"INVALID_SMILES\", \"name\": \"invalid\"},\n  {\"smiles\": \"CCO\", \"name\": \"ethanol\"}\n]"
-                }
-            }
+                },
+                "description": "Input Test Data"
+            },
+            "width": 224,
+            "height": 100,
+            "selected": false,
+            "dragging": false
         },
         {
             "id": "2",
             "type": "BaseNode",
-            "position": {"x": 400, "y": 200},
+            "position": {
+                "x": 400,
+                "y": 200
+            },
             "data": {
                 "id": "org.projectcontinuum.feature.rdkit.node.CanonicalSmilesNodeModel",
                 "title": "Canonical SMILES",
                 "subTitle": "Canonicalize SMILES strings",
                 "nodeModel": "org.projectcontinuum.feature.rdkit.node.CanonicalSmilesNodeModel",
                 "inputs": {
-                    "input": {"name": "input table", "contentType": "application/octet-stream"}
+                    "input": {
+                        "name": "input table",
+                        "contentType": "application/octet-stream"
+                    }
                 },
                 "outputs": {
-                    "output": {"name": "output table", "contentType": "application/octet-stream"}
+                    "output": {
+                        "name": "output table",
+                        "contentType": "application/octet-stream"
+                    }
                 },
                 "properties": {
                     "smilesColumn": "smiles",
                     "newColumnName": "canonical_smiles",
                     "removeSourceColumn": false
-                }
-            }
+                },
+                "description": "Canonical SMILES"
+            },
+            "width": 224,
+            "height": 123,
+            "selected": false,
+            "dragging": false
         },
         {
             "id": "3",
             "type": "BaseNode",
-            "position": {"x": 100, "y": 400},
+            "position": {
+                "x": 100,
+                "y": 400
+            },
             "data": {
-                "id": "org.projectcontinuum.base.node.CreateTableNodeModel",
+                "id": "org.projectcontinuum.feature.base.analytics.node.CreateTableNodeModel",
                 "title": "Expected Results",
                 "subTitle": "Expected canonical SMILES",
-                "nodeModel": "org.projectcontinuum.base.node.CreateTableNodeModel",
+                "nodeModel": "org.projectcontinuum.feature.base.analytics.node.CreateTableNodeModel",
                 "inputs": null,
                 "outputs": {
-                    "data": {"name": "output table", "contentType": "application/octet-stream"}
+                    "data": {
+                        "name": "output table",
+                        "contentType": "application/octet-stream"
+                    }
                 },
                 "properties": {
                     "jsonArrayString": "[\n  {\"smiles\": \"OC(=O)c1ccccc1OC(C)=O\", \"name\": \"aspirin\", \"canonical_smiles\": \"CC(=O)Oc1ccccc1C(=O)O\"},\n  {\"smiles\": \"c1ccccc1\", \"name\": \"benzene\", \"canonical_smiles\": \"c1ccccc1\"},\n  {\"smiles\": \"CC(C)Cc1ccc(C(C)C(=O)O)cc1\", \"name\": \"ibuprofen\", \"canonical_smiles\": \"CC(C)Cc1ccc(C(C)C(=O)O)cc1\"},\n  {\"smiles\": \"INVALID_SMILES\", \"name\": \"invalid\", \"canonical_smiles\": \"\"},\n  {\"smiles\": \"CCO\", \"name\": \"ethanol\", \"canonical_smiles\": \"CCO\"}\n]"
-                }
-            }
+                },
+                "description": "Expected Results"
+            },
+            "width": 224,
+            "height": 100,
+            "selected": false,
+            "dragging": false
         },
         {
             "id": "4",
             "type": "BaseNode",
-            "position": {"x": 700, "y": 300},
+            "position": {
+                "x": 700,
+                "y": 300
+            },
             "data": {
                 "id": "org.projectcontinuum.feature.rdkit.node.SDFDifferenceCheckerNodeModel",
                 "title": "SDF Difference Checker",
                 "subTitle": "Verify results match expected",
                 "nodeModel": "org.projectcontinuum.feature.rdkit.node.SDFDifferenceCheckerNodeModel",
                 "inputs": {
-                    "left": {"name": "left table", "contentType": "application/octet-stream"},
-                    "right": {"name": "right table", "contentType": "application/octet-stream"}
+                    "left": {
+                        "name": "left table",
+                        "contentType": "application/octet-stream"
+                    },
+                    "right": {
+                        "name": "right table",
+                        "contentType": "application/octet-stream"
+                    }
                 },
                 "outputs": {
-                    "output": {"name": "comparison results", "contentType": "application/octet-stream"}
+                    "output": {
+                        "name": "comparison results",
+                        "contentType": "application/octet-stream"
+                    }
                 },
                 "properties": {
                     "leftSmilesColumn": "canonical_smiles",
@@ -85,8 +133,13 @@
                     "outputDifferencesOnly": false,
                     "differenceColumnName": "differences",
                     "matchColumnName": "match_status"
-                }
-            }
+                },
+                "description": "SDF Difference Checker"
+            },
+            "width": 224,
+            "height": 123,
+            "selected": false,
+            "dragging": false
         }
     ],
     "edges": [
@@ -116,4 +169,3 @@
         }
     ]
 }
-
