@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -243,30 +244,25 @@ class MoleculeCatalogFilterNodeModel : ProcessNodeModel() {
                             var matchDetails = ""
 
                             if (smilesValue.isNotEmpty()) {
-                                val mol = RDKFuncs.SmilesToMol(smilesValue)
-                                try {
-                                    if (mol != null) {
-                                        val matches = filterCatalog.getMatches(mol)
-                                        try {
-                                            matchCount = matches.size().toInt()
-                                            if (matchCount > 0) {
-                                                val details = mutableListOf<String>()
-                                                for (i in 0 until matchCount) {
-                                                    val entry = matches[i]
-                                                    try {
-                                                        details.add(entry.getDescription())
-                                                    } catch (e: Exception) {
-                                                        details.add("match_$i")
-                                                    }
+                                RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                                    val matches = filterCatalog.getMatches(mol)
+                                    try {
+                                        matchCount = matches.size().toInt()
+                                        if (matchCount > 0) {
+                                            val details = mutableListOf<String>()
+                                            for (i in 0 until matchCount) {
+                                                val entry = matches[i]
+                                                try {
+                                                    details.add(entry.getDescription())
+                                                } catch (e: Exception) {
+                                                    details.add("match_$i")
                                                 }
-                                                matchDetails = details.joinToString("; ")
                                             }
-                                        } finally {
-                                            matches.delete()
+                                            matchDetails = details.joinToString("; ")
                                         }
+                                    } finally {
+                                        matches.delete()
                                     }
-                                } finally {
-                                    mol?.delete()
                                 }
                             }
 

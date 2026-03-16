@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -249,14 +250,14 @@ class StructureNormalizerNodeModel : ProcessNodeModel() {
         neutralizationReactions: List<ChemicalReaction>
     ): String {
         // Verify the input is a valid SMILES before applying normalization
-        val initialMol = RDKFuncs.SmilesToMol(inputSmiles)
+        val initialMol = RDKitNodeHelper.parseMoleculeOrNull(inputSmiles)
         if (initialMol == null) return ""
         initialMol.delete()
 
         var currentSmiles = inputSmiles
 
         for (step in steps) {
-            val mol = RDKFuncs.SmilesToMol(currentSmiles)
+            val mol = RDKitNodeHelper.parseMoleculeOrNull(currentSmiles)
             if (mol == null) return currentSmiles
 
             try {
@@ -351,7 +352,7 @@ class StructureNormalizerNodeModel : ProcessNodeModel() {
         var currentSmiles = smiles
 
         for (reaction in reactions) {
-            val mol = RDKFuncs.SmilesToMol(currentSmiles) ?: continue
+            val mol = RDKitNodeHelper.parseMoleculeOrNull(currentSmiles) ?: continue
             try {
                 val reactantVect = ROMol_Vect()
                 try {

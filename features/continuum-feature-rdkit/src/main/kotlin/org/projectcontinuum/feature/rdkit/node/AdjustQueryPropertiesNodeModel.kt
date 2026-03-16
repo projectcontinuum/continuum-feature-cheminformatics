@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -248,21 +249,21 @@ class AdjustQueryPropertiesNodeModel : ProcessNodeModel() {
                     var querySmarts = ""
 
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
-                        try {
-                            if (mol != null) {
-                                // Apply aromaticity if requested
-                                if (aromatize) {
-                                    RDKFuncs.setAromaticity(mol)
+                        querySmarts = RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                            // Apply aromaticity if requested
+                            if (aromatize) {
+                                val rwMol = RWMol(mol)
+                                try {
+                                    RDKFuncs.setAromaticity(rwMol)
+                                    RDKFuncs.MolToSmarts(rwMol)
+                                } finally {
+                                    rwMol.delete()
                                 }
+                            } else {
                                 // Convert molecule to SMARTS query representation
-                                // MolToSmarts produces atom-level SMARTS with element and
-                                // connectivity info, effectively creating a query
-                                querySmarts = RDKFuncs.MolToSmarts(mol)
+                                RDKFuncs.MolToSmarts(mol)
                             }
-                        } finally {
-                            mol?.delete()
-                        }
+                        } ?: ""
                     }
 
                     // Build output row

@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -237,59 +238,54 @@ class RDKit2SVGNodeModel : ProcessNodeModel() {
                     var svgDocument: Document? = null
 
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
-                        try {
-                            if (mol != null) {
-                                // Generate 2D coordinates if not present
-                                if (mol.getNumConformers() == 0L) {
-                                    mol.compute2DCoords()
-                                }
-
-                                // Create SVG drawer
-                                val drawer = MolDraw2DSVG(width, height)
-                                try {
-                                    if (highlightAtomIndices.isNotEmpty()) {
-                                        // Apply highlight color from hex string
-                                        val highlightDrawColour = parseHexColor(highlightColor)
-                                        try {
-                                            drawer.drawOptions().setHighlightColour(highlightDrawColour)
-                                        } finally {
-                                            highlightDrawColour.delete()
-                                        }
-
-                                        val atomVect = Int_Vect()
-                                        try {
-                                            for (idx in highlightAtomIndices) {
-                                                if (idx < mol.getNumAtoms().toInt()) {
-                                                    atomVect.add(idx)
-                                                }
-                                            }
-                                            drawer.drawMolecule(mol, "", atomVect)
-                                        } finally {
-                                            atomVect.delete()
-                                        }
-                                    } else {
-                                        drawer.drawMolecule(mol)
-                                    }
-                                    drawer.finishDrawing()
-                                    var svgText = drawer.getDrawingText()
-
-                                    // Ensure SVG namespace is present
-                                    if (!svgText.contains("xmlns=")) {
-                                        svgText = svgText.replaceFirst(
-                                            "<svg",
-                                            "<svg xmlns=\"http://www.w3.org/2000/svg\""
-                                        )
-                                    }
-
-                                    // Parse SVG string into DOM Document
-                                    svgDocument = parseSvgToDocument(svgText)
-                                } finally {
-                                    drawer.delete()
-                                }
+                        svgDocument = RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                            // Generate 2D coordinates if not present
+                            if (mol.getNumConformers() == 0L) {
+                                mol.compute2DCoords()
                             }
-                        } finally {
-                            mol?.delete()
+
+                            // Create SVG drawer
+                            val drawer = MolDraw2DSVG(width, height)
+                            try {
+                                if (highlightAtomIndices.isNotEmpty()) {
+                                    // Apply highlight color from hex string
+                                    val highlightDrawColour = parseHexColor(highlightColor)
+                                    try {
+                                        drawer.drawOptions().setHighlightColour(highlightDrawColour)
+                                    } finally {
+                                        highlightDrawColour.delete()
+                                    }
+
+                                    val atomVect = Int_Vect()
+                                    try {
+                                        for (idx in highlightAtomIndices) {
+                                            if (idx < mol.getNumAtoms().toInt()) {
+                                                atomVect.add(idx)
+                                            }
+                                        }
+                                        drawer.drawMolecule(mol, "", atomVect)
+                                    } finally {
+                                        atomVect.delete()
+                                    }
+                                } else {
+                                    drawer.drawMolecule(mol)
+                                }
+                                drawer.finishDrawing()
+                                var svgText = drawer.getDrawingText()
+
+                                // Ensure SVG namespace is present
+                                if (!svgText.contains("xmlns=")) {
+                                    svgText = svgText.replaceFirst(
+                                        "<svg",
+                                        "<svg xmlns=\"http://www.w3.org/2000/svg\""
+                                    )
+                                }
+
+                                // Parse SVG string into DOM Document
+                                parseSvgToDocument(svgText)
+                            } finally {
+                                drawer.delete()
+                            }
                         }
                     }
 

@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -201,7 +202,7 @@ class RGroupDecompositionNodeModel : ProcessNodeModel() {
         )
 
         // Parse core SMARTS
-        val coreMol = RDKFuncs.SmartsToMol(coreSmarts) ?: throw NodeRuntimeException(
+        val coreMol = RDKitNodeHelper.parseSmartsOrNull(coreSmarts) ?: throw NodeRuntimeException(
             workflowId = "",
             nodeId = "",
             message = "Invalid core SMARTS: $coreSmarts"
@@ -218,7 +219,7 @@ class RGroupDecompositionNodeModel : ProcessNodeModel() {
                     allRows.add(row)
                     val smilesValue = row[smilesColumn]?.toString() ?: ""
                     if (smilesValue.isNotEmpty()) {
-                        allMols.add(RDKFuncs.SmilesToMol(smilesValue))
+                        allMols.add(RDKitNodeHelper.parseMoleculeOrNull(smilesValue))
                     } else {
                         allMols.add(null)
                     }

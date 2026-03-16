@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -393,7 +394,7 @@ class SDFDifferenceCheckerNodeModel : ProcessNodeModel() {
         return if (input.contains("V2000") || input.contains("V3000") || input.contains("M  END")) {
             RDKFuncs.MolBlockToMol(input)
         } else {
-            RDKFuncs.SmilesToMol(input)
+            RDKitNodeHelper.parseMoleculeOrNull(input)
         }
     }
 }
