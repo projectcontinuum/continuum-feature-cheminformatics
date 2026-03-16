@@ -69,8 +69,7 @@ class MoleculeSubstructFilterNodeModel : ProcessNodeModel() {
     )
 
     override val categories = listOf(
-        "RDKit",
-        "Searching"
+        "RDKit/Searching"
     )
 
     val propertiesSchema: Map<String, Any> = objectMapper.readValue(

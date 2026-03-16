@@ -73,8 +73,7 @@ class TwoComponentReactionNodeModel : ProcessNodeModel() {
     )
 
     override val categories = listOf(
-        "RDKit",
-        "Reactions"
+        "RDKit/Reactions"
     )
 
     val propertiesSchema: Map<String, Any> = objectMapper.readValue(

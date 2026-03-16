@@ -59,8 +59,7 @@ class AromatizeNodeModel : ProcessNodeModel() {
     )
 
     override val categories = listOf(
-        "RDKit",
-        "Modifiers"
+        "RDKit/Modifiers"
     )
 
     val propertiesSchema: Map<String, Any> = objectMapper.readValue(

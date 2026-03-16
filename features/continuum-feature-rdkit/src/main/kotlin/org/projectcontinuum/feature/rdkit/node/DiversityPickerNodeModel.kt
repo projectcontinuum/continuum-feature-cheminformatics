@@ -67,8 +67,7 @@ class DiversityPickerNodeModel : ProcessNodeModel() {
     )
 
     override val categories = listOf(
-        "RDKit",
-        "Fingerprints"
+        "RDKit/Fingerprints"
     )
 
     val propertiesSchema: Map<String, Any> = objectMapper.readValue(

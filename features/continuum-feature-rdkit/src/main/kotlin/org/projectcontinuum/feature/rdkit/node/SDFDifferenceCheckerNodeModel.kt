@@ -67,8 +67,7 @@ class SDFDifferenceCheckerNodeModel : ProcessNodeModel() {
     )
 
     override val categories = listOf(
-        "RDKit",
-        "Testing"
+        "RDKit/Testing"
     )
 
     val propertiesSchema: Map<String, Any> = objectMapper.readValue(

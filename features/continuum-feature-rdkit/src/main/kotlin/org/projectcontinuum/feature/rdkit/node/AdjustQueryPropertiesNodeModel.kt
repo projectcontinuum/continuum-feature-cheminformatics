@@ -63,8 +63,7 @@ class AdjustQueryPropertiesNodeModel : ProcessNodeModel() {
     )
 
     override val categories = listOf(
-        "RDKit",
-        "Experimental"
+        "RDKit/Experimental"
     )
 
     val propertiesSchema: Map<String, Any> = objectMapper.readValue(

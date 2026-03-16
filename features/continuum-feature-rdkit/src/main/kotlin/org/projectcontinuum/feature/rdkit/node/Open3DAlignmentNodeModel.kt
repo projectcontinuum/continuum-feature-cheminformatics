@@ -67,8 +67,7 @@ class Open3DAlignmentNodeModel : ProcessNodeModel() {
     )
 
     override val categories = listOf(
-        "RDKit",
-        "Geometry"
+        "RDKit/Geometry"
     )
 
     val propertiesSchema: Map<String, Any> = objectMapper.readValue(

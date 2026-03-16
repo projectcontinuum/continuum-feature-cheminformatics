@@ -62,8 +62,7 @@ class MurckoScaffoldNodeModel : ProcessNodeModel() {
     )
 
     override val categories = listOf(
-        "RDKit",
-        "Fragments"
+        "RDKit/Fragments"
     )
 
     val propertiesSchema: Map<String, Any> = objectMapper.readValue(

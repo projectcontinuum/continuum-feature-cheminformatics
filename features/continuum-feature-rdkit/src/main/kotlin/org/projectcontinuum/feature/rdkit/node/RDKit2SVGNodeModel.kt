@@ -65,8 +65,7 @@ class RDKit2SVGNodeModel : ProcessNodeModel() {
     )
 
     override val categories = listOf(
-        "RDKit",
-        "Rendering"
+        "RDKit/Rendering"
     )
 
     val propertiesSchema: Map<String, Any> = objectMapper.readValue(

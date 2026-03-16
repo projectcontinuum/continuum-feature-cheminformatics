@@ -61,8 +61,7 @@ class DescriptorCalculationNodeModel : ProcessNodeModel() {
     )
 
     override val categories = listOf(
-        "RDKit",
-        "Calculators"
+        "RDKit/Calculators"
     )
 
     val propertiesSchema: Map<String, Any> = objectMapper.readValue(

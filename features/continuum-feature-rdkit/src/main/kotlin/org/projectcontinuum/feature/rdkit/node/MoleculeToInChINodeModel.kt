@@ -65,8 +65,7 @@ class MoleculeToInChINodeModel : ProcessNodeModel() {
     )
 
     override val categories = listOf(
-        "RDKit",
-        "Converters"
+        "RDKit/Converters"
     )
 
     val propertiesSchema: Map<String, Any> = objectMapper.readValue(
