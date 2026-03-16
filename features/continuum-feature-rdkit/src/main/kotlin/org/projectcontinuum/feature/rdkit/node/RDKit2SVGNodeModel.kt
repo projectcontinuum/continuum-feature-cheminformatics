@@ -249,6 +249,14 @@ class RDKit2SVGNodeModel : ProcessNodeModel() {
                                 val drawer = MolDraw2DSVG(width, height)
                                 try {
                                     if (highlightAtomIndices.isNotEmpty()) {
+                                        // Apply highlight color from hex string
+                                        val highlightDrawColour = parseHexColor(highlightColor)
+                                        try {
+                                            drawer.drawOptions().setHighlightColour(highlightDrawColour)
+                                        } finally {
+                                            highlightDrawColour.delete()
+                                        }
+
                                         val atomVect = Int_Vect()
                                         try {
                                             for (idx in highlightAtomIndices) {
@@ -320,6 +328,22 @@ class RDKit2SVGNodeModel : ProcessNodeModel() {
         factory.isNamespaceAware = true
         val builder = factory.newDocumentBuilder()
         return builder.parse(InputSource(StringReader(svgText)))
+    }
+
+    /**
+     * Parses a hex color string (e.g. "#FF0000") into an RDKit DrawColour with RGB values 0.0–1.0.
+     * Falls back to red if the string is malformed.
+     */
+    private fun parseHexColor(hex: String): DrawColour {
+        return try {
+            val cleaned = hex.removePrefix("#")
+            val r = Integer.parseInt(cleaned.substring(0, 2), 16) / 255.0
+            val g = Integer.parseInt(cleaned.substring(2, 4), 16) / 255.0
+            val b = Integer.parseInt(cleaned.substring(4, 6), 16) / 255.0
+            DrawColour(r, g, b)
+        } catch (e: Exception) {
+            DrawColour(1.0, 0.0, 0.0) // default red
+        }
     }
 }
 
