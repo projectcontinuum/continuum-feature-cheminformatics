@@ -11,7 +11,11 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE
+import org.w3c.dom.Document
+import org.xml.sax.InputSource
 import org.RDKit.*
+import java.io.StringReader
+import javax.xml.parsers.DocumentBuilderFactory
 
 /**
  * RDKit to SVG Node Model
@@ -230,7 +234,7 @@ class RDKit2SVGNodeModel : ProcessNodeModel() {
 
                 while (row != null) {
                     val smilesValue = row[smilesColumn]?.toString() ?: ""
-                    var svgOutput = ""
+                    var svgDocument: Document? = null
 
                     if (smilesValue.isNotEmpty()) {
                         val mol = RDKFuncs.SmilesToMol(smilesValue)
@@ -260,15 +264,18 @@ class RDKit2SVGNodeModel : ProcessNodeModel() {
                                         drawer.drawMolecule(mol)
                                     }
                                     drawer.finishDrawing()
-                                    svgOutput = drawer.getDrawingText()
+                                    var svgText = drawer.getDrawingText()
 
                                     // Ensure SVG namespace is present
-                                    if (!svgOutput.contains("xmlns=")) {
-                                        svgOutput = svgOutput.replaceFirst(
+                                    if (!svgText.contains("xmlns=")) {
+                                        svgText = svgText.replaceFirst(
                                             "<svg",
                                             "<svg xmlns=\"http://www.w3.org/2000/svg\""
                                         )
                                     }
+
+                                    // Parse SVG string into DOM Document
+                                    svgDocument = parseSvgToDocument(svgText)
                                 } finally {
                                     drawer.delete()
                                 }
@@ -283,7 +290,11 @@ class RDKit2SVGNodeModel : ProcessNodeModel() {
                     if (removeSourceColumn) {
                         outputRow.remove(smilesColumn)
                     }
-                    outputRow[svgColumnName] = svgOutput
+                    if (svgDocument != null) {
+                        outputRow[svgColumnName] = svgDocument
+                    } else {
+                        outputRow[svgColumnName] = ""
+                    }
 
                     writer.write(rowNumber, outputRow)
 
@@ -299,6 +310,16 @@ class RDKit2SVGNodeModel : ProcessNodeModel() {
 
         nodeProgressCallback.report(100)
         LOGGER.info("RDKit2SVG rendering completed")
+    }
+
+    /**
+     * Parses an SVG string into a DOM Document for MIME-typed serialization.
+     */
+    private fun parseSvgToDocument(svgText: String): Document {
+        val factory = DocumentBuilderFactory.newInstance()
+        factory.isNamespaceAware = true
+        val builder = factory.newDocumentBuilder()
+        return builder.parse(InputSource(StringReader(svgText)))
     }
 }
 

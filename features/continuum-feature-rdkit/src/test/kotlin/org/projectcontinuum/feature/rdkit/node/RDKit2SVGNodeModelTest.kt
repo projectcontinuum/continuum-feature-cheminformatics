@@ -15,6 +15,11 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.w3c.dom.Document
+import java.io.StringWriter
+import javax.xml.transform.TransformerFactory
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.stream.StreamResult
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -115,12 +120,13 @@ class RDKit2SVGNodeModelTest {
         verify(mockPortWriter, times(1)).write(any(), rowCaptor.capture())
         val outputRow = rowCaptor.allValues[0]
 
-        // SVG column should exist and contain SVG content
+        // SVG column should exist and contain a Document
         assertTrue(outputRow.containsKey("svg"))
-        val svgContent = outputRow["svg"] as String
-        assertTrue(svgContent.contains("<svg"))
-        assertTrue(svgContent.contains("</svg>"))
-        assertTrue(svgContent.contains("xmlns"))
+        assertTrue(outputRow["svg"] is Document, "SVG output should be a DOM Document")
+        val svgDoc = outputRow["svg"] as Document
+        val svgString = documentToString(svgDoc)
+        assertTrue(svgString.contains("<svg"))
+        assertTrue(svgString.contains("</svg>"))
 
         // Original columns preserved
         assertEquals("c1ccccc1", outputRow["smiles"])
@@ -151,9 +157,10 @@ class RDKit2SVGNodeModelTest {
         verify(mockPortWriter, times(2)).write(any(), rowCaptor.capture())
         for (outputRow in rowCaptor.allValues) {
             assertTrue(outputRow.containsKey("molecule_svg"))
-            val svgContent = outputRow["molecule_svg"] as String
-            assertTrue(svgContent.contains("<svg"))
-            assertTrue(svgContent.contains("</svg>"))
+            assertTrue(outputRow["molecule_svg"] is Document, "SVG output should be a DOM Document")
+            val svgString = documentToString(outputRow["molecule_svg"] as Document)
+            assertTrue(svgString.contains("<svg"))
+            assertTrue(svgString.contains("</svg>"))
         }
     }
 
@@ -178,13 +185,14 @@ class RDKit2SVGNodeModelTest {
 
         verify(mockPortWriter, times(2)).write(any(), rowCaptor.capture())
 
-        // Invalid SMILES produces empty SVG
+        // Invalid SMILES produces empty string
         assertEquals("", rowCaptor.allValues[0]["svg"])
         assertEquals("INVALID", rowCaptor.allValues[0]["smiles"])
 
-        // Valid SMILES produces SVG
-        val svgContent = rowCaptor.allValues[1]["svg"] as String
-        assertTrue(svgContent.contains("<svg"))
+        // Valid SMILES produces a Document
+        assertTrue(rowCaptor.allValues[1]["svg"] is Document, "Valid SMILES should produce a DOM Document")
+        val svgString = documentToString(rowCaptor.allValues[1]["svg"] as Document)
+        assertTrue(svgString.contains("<svg"))
     }
 
     @Test
@@ -257,9 +265,10 @@ class RDKit2SVGNodeModelTest {
         nodeModel.execute(properties, inputs, mockOutputWriter, mockProgressCallback)
 
         verify(mockPortWriter, times(1)).write(any(), rowCaptor.capture())
-        val svgContent = rowCaptor.allValues[0]["svg"] as String
-        assertTrue(svgContent.contains("<svg"))
-        assertTrue(svgContent.contains("</svg>"))
+        assertTrue(rowCaptor.allValues[0]["svg"] is Document, "Highlighted SVG should be a DOM Document")
+        val svgString = documentToString(rowCaptor.allValues[0]["svg"] as Document)
+        assertTrue(svgString.contains("<svg"))
+        assertTrue(svgString.contains("</svg>"))
     }
 
     @Test
@@ -367,6 +376,13 @@ class RDKit2SVGNodeModelTest {
             callCount++
             result
         }
+    }
+
+    private fun documentToString(doc: Document): String {
+        val transformer = TransformerFactory.newInstance().newTransformer()
+        val writer = StringWriter()
+        transformer.transform(DOMSource(doc), StreamResult(writer))
+        return writer.toString()
     }
 }
 
