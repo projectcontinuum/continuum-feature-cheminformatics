@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -185,7 +186,7 @@ class RMSDFilterNodeModel : ProcessNodeModel() {
                 var mol: ROMol? = null
 
                 if (smilesValue.isNotEmpty()) {
-                    val parsed = RDKFuncs.SmilesToMol(smilesValue)
+                    val parsed = RDKitNodeHelper.parseMoleculeOrNull(smilesValue)
                     if (parsed != null) {
                         if (!ignoreHydrogens) {
                             RDKFuncs.addHs(parsed)

@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -194,17 +195,12 @@ class AddCoordinatesNodeModel : ProcessNodeModel() {
 
                     var molBlock: Any = ""
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
-                        if (mol != null) {
-                            try {
-                                molBlock = when (dimension) {
-                                    "3D" -> generate3DCoords(mol)
-                                    else -> generate2DCoords(mol)
-                                }
-                            } finally {
-                                mol.delete()
+                        molBlock = RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                            when (dimension) {
+                                "3D" -> generate3DCoords(mol)
+                                else -> generate2DCoords(mol)
                             }
-                        }
+                        } ?: ""
                     }
 
                     outputRow[newColumnName] = molBlock

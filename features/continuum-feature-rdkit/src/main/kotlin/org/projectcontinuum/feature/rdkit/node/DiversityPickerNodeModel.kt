@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -225,20 +226,13 @@ class DiversityPickerNodeModel : ProcessNodeModel() {
                 allRows.add(row)
                 val smilesValue = row[smilesColumn]?.toString() ?: ""
                 if (smilesValue.isNotEmpty()) {
-                    val mol = RDKFuncs.SmilesToMol(smilesValue)
-                    if (mol != null) {
-                        try {
-                            val fp = when (fingerprintType) {
-                                "RDKit" -> RDKFuncs.RDKFingerprintMol(mol)
-                                else -> RDKFuncs.getMorganFingerprintAsBitVect(mol, radius.toLong(), numBits.toLong())
-                            }
-                            fingerprints.add(fp)
-                        } finally {
-                            mol.delete()
+                    val fp = RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                        when (fingerprintType) {
+                            "RDKit" -> RDKFuncs.RDKFingerprintMol(mol)
+                            else -> RDKFuncs.getMorganFingerprintAsBitVect(mol, radius.toLong(), numBits.toLong())
                         }
-                    } else {
-                        fingerprints.add(null)
                     }
+                    fingerprints.add(fp)
                 } else {
                     fingerprints.add(null)
                 }

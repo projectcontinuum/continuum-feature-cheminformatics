@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -291,33 +292,28 @@ class TwoComponentReactionNodeModel : ProcessNodeModel() {
                     while (r1Row != null) {
                         val smiles1 = r1Row[reactant1SmilesColumn]?.toString() ?: ""
                         if (smiles1.isNotEmpty()) {
-                            val mol1 = RDKFuncs.SmilesToMol(smiles1)
-                            if (mol1 != null) {
-                                try {
-                                    if (matrixExpansion) {
-                                        // Matrix mode: pair with every reactant2
-                                        for (r2Row in reactant2Rows) {
-                                            outputRowNumber = runReactionPair(
-                                                mol1, r1Row, r2Row, reactant2SmilesColumn,
-                                                reactions, writer, outputRowNumber,
-                                                productColumnName, productIndexColumnName,
-                                                includeReactantColumns
-                                            )
-                                        }
-                                    } else {
-                                        // Pairwise mode: pair by index
-                                        if (r1Index < reactant2Rows.size) {
-                                            val r2Row = reactant2Rows[r1Index]
-                                            outputRowNumber = runReactionPair(
-                                                mol1, r1Row, r2Row, reactant2SmilesColumn,
-                                                reactions, writer, outputRowNumber,
-                                                productColumnName, productIndexColumnName,
-                                                includeReactantColumns
-                                            )
-                                        }
+                            RDKitNodeHelper.withMolecule(smiles1) { mol1 ->
+                                if (matrixExpansion) {
+                                    // Matrix mode: pair with every reactant2
+                                    for (r2Row in reactant2Rows) {
+                                        outputRowNumber = runReactionPair(
+                                            mol1, r1Row, r2Row, reactant2SmilesColumn,
+                                            reactions, writer, outputRowNumber,
+                                            productColumnName, productIndexColumnName,
+                                            includeReactantColumns
+                                        )
                                     }
-                                } finally {
-                                    mol1.delete()
+                                } else {
+                                    // Pairwise mode: pair by index
+                                    if (r1Index < reactant2Rows.size) {
+                                        val r2Row = reactant2Rows[r1Index]
+                                        outputRowNumber = runReactionPair(
+                                            mol1, r1Row, r2Row, reactant2SmilesColumn,
+                                            reactions, writer, outputRowNumber,
+                                            productColumnName, productIndexColumnName,
+                                            includeReactantColumns
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -359,10 +355,7 @@ class TwoComponentReactionNodeModel : ProcessNodeModel() {
         val smiles2 = r2Row[reactant2SmilesColumn]?.toString() ?: ""
         if (smiles2.isEmpty()) return outputRowNumber
 
-        val mol2 = RDKFuncs.SmilesToMol(smiles2)
-        if (mol2 == null) return outputRowNumber
-
-        try {
+        RDKitNodeHelper.withMolecule(smiles2) { mol2 ->
             for (reaction in reactions) {
                 val reactantVect = ROMol_Vect()
                 try {
@@ -415,8 +408,6 @@ class TwoComponentReactionNodeModel : ProcessNodeModel() {
                     reactantVect.delete()
                 }
             }
-        } finally {
-            mol2.delete()
         }
 
         return outputRowNumber

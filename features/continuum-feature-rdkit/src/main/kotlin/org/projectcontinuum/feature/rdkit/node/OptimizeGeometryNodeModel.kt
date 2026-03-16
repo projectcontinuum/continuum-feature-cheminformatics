@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -235,32 +236,27 @@ class OptimizeGeometryNodeModel : ProcessNodeModel() {
                     var convergedResult: Any = ""
 
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
-                        if (mol != null) {
-                            try {
-                                RDKFuncs.addHs(mol)
-                                val params = RDKFuncs.getETKDGv3()
-                                val embedResult = DistanceGeom.EmbedMolecule(mol, params)
+                        RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                            RDKFuncs.addHs(mol)
+                            val params = RDKFuncs.getETKDGv3()
+                            val embedResult = DistanceGeom.EmbedMolecule(mol, params)
 
-                                if (embedResult >= 0) {
-                                    val ff = when (forceField) {
-                                        "UFF" -> ForceField.UFFGetMoleculeForceField(mol)
-                                        else -> ForceField.MMFFGetMoleculeForceField(mol)
-                                    }
-                                    if (ff != null) {
-                                        try {
-                                            ff.initialize()
-                                            val minimizeResult = ff.minimize(iterations.toLong())
-                                            convergedResult = minimizeResult == 0
-                                            energyResult = ff.calcEnergy()
-                                            molBlockResult = RDKFuncs.MolToMolBlock(mol)
-                                        } finally {
-                                            ff.delete()
-                                        }
+                            if (embedResult >= 0) {
+                                val ff = when (forceField) {
+                                    "UFF" -> ForceField.UFFGetMoleculeForceField(mol)
+                                    else -> ForceField.MMFFGetMoleculeForceField(mol)
+                                }
+                                if (ff != null) {
+                                    try {
+                                        ff.initialize()
+                                        val minimizeResult = ff.minimize(iterations.toLong())
+                                        convergedResult = minimizeResult == 0
+                                        energyResult = ff.calcEnergy()
+                                        molBlockResult = RDKFuncs.MolToMolBlock(mol)
+                                    } finally {
+                                        ff.delete()
                                     }
                                 }
-                            } finally {
-                                mol.delete()
                             }
                         }
                     }

@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -176,15 +177,14 @@ class RemoveHsNodeModel : ProcessNodeModel() {
                     // Parse SMILES, remove Hs, and convert back to SMILES
                     var resultSmiles = ""
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
-                        try {
-                            if (mol != null) {
-                                RDKFuncs.removeHs(mol)
-                                resultSmiles = RDKFuncs.MolToSmiles(mol)
+                        resultSmiles = RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                            val molNoHs = RDKFuncs.removeHs(mol)
+                            try {
+                                RDKFuncs.MolToSmiles(molNoHs)
+                            } finally {
+                                molNoHs.delete()
                             }
-                        } finally {
-                            mol?.delete()
-                        }
+                        } ?: ""
                     }
 
                     // Build output row: all original columns plus result column

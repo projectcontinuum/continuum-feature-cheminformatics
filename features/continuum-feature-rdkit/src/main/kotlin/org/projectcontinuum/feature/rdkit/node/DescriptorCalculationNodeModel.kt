@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -207,20 +208,15 @@ class DescriptorCalculationNodeModel : ProcessNodeModel() {
                     val outputRow = row.toMutableMap<String, Any>()
 
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
-                        try {
-                            if (mol != null) {
-                                for (descriptor in descriptorList) {
-                                    outputRow[columnPrefix + descriptor] = computeDescriptor(mol, descriptor)
-                                }
-                            } else {
-                                // Null mol (invalid SMILES) — write empty strings
-                                for (descriptor in descriptorList) {
-                                    outputRow[columnPrefix + descriptor] = ""
-                                }
+                        RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                            for (descriptor in descriptorList) {
+                                outputRow[columnPrefix + descriptor] = computeDescriptor(mol, descriptor)
                             }
-                        } finally {
-                            mol?.delete()
+                        } ?: run {
+                            // Null mol (invalid SMILES) — write empty strings
+                            for (descriptor in descriptorList) {
+                                outputRow[columnPrefix + descriptor] = ""
+                            }
                         }
                     } else {
                         // Empty SMILES — write empty strings

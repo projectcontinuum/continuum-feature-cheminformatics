@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -217,35 +218,33 @@ class AddConformersNodeModel : ProcessNodeModel() {
                     }
 
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
-                        if (mol != null) {
-                            try {
-                                RDKFuncs.addHs(mol)
-                                val confIds = DistanceGeom.EmbedMultipleConfs(mol, numberOfConformers.toLong())
+                        val conformerResult = RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                            RDKFuncs.addHs(mol)
+                            val confIds = DistanceGeom.EmbedMultipleConfs(mol, numberOfConformers.toLong())
 
-                                if (confIds.size() > 0) {
-                                    for (i in 0 until confIds.size().toInt()) {
-                                        val confId = confIds.get(i)
-                                        val molBlock = RDKFuncs.MolToMolBlock(mol, true, confId)
-                                        val outputRow = baseRow.toMutableMap<String, Any>()
-                                        outputRow[newColumnName] = molBlock
-                                        outputRow[conformerIdColumnName] = confId
-                                        writer.write(outputRowNumber, outputRow)
-                                        outputRowNumber++
-                                    }
-                                } else {
-                                    // Embedding failed — write single row with empty values
-                                    val outputRow = baseRow.toMutableMap<String, Any>()
-                                    outputRow[newColumnName] = ""
-                                    outputRow[conformerIdColumnName] = ""
-                                    writer.write(outputRowNumber, outputRow)
-                                    outputRowNumber++
+                            if (confIds.size() > 0) {
+                                val conformers = mutableListOf<Pair<String, Int>>()
+                                for (i in 0 until confIds.size().toInt()) {
+                                    val confId = confIds.get(i)
+                                    val molBlock = RDKFuncs.MolToMolBlock(mol, true, confId)
+                                    conformers.add(Pair(molBlock, confId))
                                 }
-                            } finally {
-                                mol.delete()
+                                conformers
+                            } else {
+                                null
+                            }
+                        }
+
+                        if (conformerResult != null && conformerResult.isNotEmpty()) {
+                            for ((molBlock, confId) in conformerResult) {
+                                val outputRow = baseRow.toMutableMap<String, Any>()
+                                outputRow[newColumnName] = molBlock
+                                outputRow[conformerIdColumnName] = confId
+                                writer.write(outputRowNumber, outputRow)
+                                outputRowNumber++
                             }
                         } else {
-                            // Invalid SMILES — write single row with empty values
+                            // Invalid SMILES or embedding failed — write single row with empty values
                             val outputRow = baseRow.toMutableMap<String, Any>()
                             outputRow[newColumnName] = ""
                             outputRow[conformerIdColumnName] = ""

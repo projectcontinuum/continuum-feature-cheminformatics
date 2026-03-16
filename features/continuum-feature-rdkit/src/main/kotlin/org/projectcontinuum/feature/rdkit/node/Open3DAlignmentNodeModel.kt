@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -211,15 +212,14 @@ class Open3DAlignmentNodeModel : ProcessNodeModel() {
             message = "Input port 'reference' is not connected"
         )
 
-        // === Read ALL reference molecules first ===
-        val refMols = mutableListOf<ROMol>()
-        try {
+        // === Read ALL reference molecules first using memory-safe helper ===
+        RDKitNodeHelper.withMoleculeList { refMols ->
             referenceReader.use { reader ->
                 var row = reader.read()
                 while (row != null) {
                     val smilesValue = row[referenceSmilesColumn]?.toString() ?: ""
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
+                        val mol = RDKitNodeHelper.parseMoleculeOrNull(smilesValue)
                         if (mol != null) {
                             RDKFuncs.addHs(mol)
                             val params = RDKFuncs.getETKDGv3()
@@ -256,34 +256,29 @@ class Open3DAlignmentNodeModel : ProcessNodeModel() {
                         var bestScore: Any = ""
 
                         if (smilesValue.isNotEmpty() && refMols.isNotEmpty()) {
-                            val queryMol = RDKFuncs.SmilesToMol(smilesValue)
-                            if (queryMol != null) {
-                                try {
-                                    RDKFuncs.addHs(queryMol)
-                                    val params = RDKFuncs.getETKDGv3()
-                                    val embedResult = DistanceGeom.EmbedMolecule(queryMol, params)
+                            RDKitNodeHelper.withMolecule(smilesValue) { queryMol ->
+                                RDKFuncs.addHs(queryMol)
+                                val params = RDKFuncs.getETKDGv3()
+                                val embedResult = DistanceGeom.EmbedMolecule(queryMol, params)
 
-                                    if (embedResult >= 0) {
-                                        var minRmsd = Double.MAX_VALUE
+                                if (embedResult >= 0) {
+                                    var minRmsd = Double.MAX_VALUE
 
-                                        for (refMol in refMols) {
-                                            // Create a copy of the query mol for alignment
-                                            val queryMolCopy = ROMol(queryMol)
-                                            try {
-                                                val rmsd = queryMolCopy.alignMol(refMol)
-                                                if (rmsd < minRmsd) {
-                                                    minRmsd = rmsd
-                                                    alignedMolBlock = RDKFuncs.MolToMolBlock(queryMolCopy)
-                                                    bestRmsd = rmsd
-                                                    bestScore = rmsd
-                                                }
-                                            } finally {
-                                                queryMolCopy.delete()
+                                    for (refMol in refMols) {
+                                        // Create a copy of the query mol for alignment
+                                        val queryMolCopy = ROMol(queryMol)
+                                        try {
+                                            val rmsd = queryMolCopy.alignMol(refMol)
+                                            if (rmsd < minRmsd) {
+                                                minRmsd = rmsd
+                                                alignedMolBlock = RDKFuncs.MolToMolBlock(queryMolCopy)
+                                                bestRmsd = rmsd
+                                                bestScore = rmsd
                                             }
+                                        } finally {
+                                            queryMolCopy.delete()
                                         }
                                     }
-                                } finally {
-                                    queryMol.delete()
                                 }
                             }
                         }
@@ -298,11 +293,6 @@ class Open3DAlignmentNodeModel : ProcessNodeModel() {
                         row = reader.read()
                     }
                 }
-            }
-        } finally {
-            // === Clean up reference molecules ===
-            for (refMol in refMols) {
-                refMol.delete()
             }
         }
 

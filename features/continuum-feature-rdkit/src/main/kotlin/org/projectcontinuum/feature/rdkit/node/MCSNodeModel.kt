@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -191,15 +192,14 @@ class MCSNodeModel : ProcessNodeModel() {
             message = "Input port 'input' is not connected"
         )
 
-        // === Read all molecules into memory ===
-        val molecules = mutableListOf<ROMol>()
-        try {
+        // === Read all molecules into memory using memory-safe helper ===
+        RDKitNodeHelper.withMoleculeList { molecules ->
             inputReader.use { reader ->
                 var row = reader.read()
                 while (row != null) {
                     val smilesValue = row[smilesColumn]?.toString() ?: ""
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
+                        val mol = RDKitNodeHelper.parseMoleculeOrNull(smilesValue)
                         if (mol != null) {
                             molecules.add(mol)
                         }
@@ -256,11 +256,6 @@ class MCSNodeModel : ProcessNodeModel() {
                     "num_molecules" to molecules.size
                 )
                 writer.write(0L, outputRow)
-            }
-        } finally {
-            // === Clean up molecules ===
-            for (mol in molecules) {
-                mol.delete()
             }
         }
 

@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -175,14 +176,9 @@ class CanonicalSmilesNodeModel : ProcessNodeModel() {
                     // Parse SMILES and convert to canonical form
                     var canonicalSmiles = ""
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
-                        try {
-                            if (mol != null) {
-                                canonicalSmiles = RDKFuncs.MolToSmiles(mol)
-                            }
-                        } finally {
-                            mol?.delete()
-                        }
+                        canonicalSmiles = RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                            RDKFuncs.MolToSmiles(mol)
+                        } ?: ""
                     }
 
                     // Build output row: all original columns plus canonical SMILES column

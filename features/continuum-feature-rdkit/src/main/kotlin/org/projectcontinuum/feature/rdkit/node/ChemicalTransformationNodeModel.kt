@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -293,7 +294,7 @@ class ChemicalTransformationNodeModel : ProcessNodeModel() {
             var changed = false
 
             for (reaction in reactions) {
-                val mol = RDKFuncs.SmilesToMol(currentSmiles)
+                val mol = RDKitNodeHelper.parseMoleculeOrNull(currentSmiles)
                 if (mol == null) return currentSmiles
 
                 try {

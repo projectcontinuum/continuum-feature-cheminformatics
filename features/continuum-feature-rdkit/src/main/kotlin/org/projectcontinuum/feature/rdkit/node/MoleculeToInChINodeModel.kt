@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -204,18 +205,13 @@ class MoleculeToInChINodeModel : ProcessNodeModel() {
                     var inchi = ""
                     var inchiKey = ""
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
-                        try {
-                            if (mol != null) {
-                                synchronized(INCHI_LOCK) {
-                                    inchi = RDKFuncs.MolToInchi(mol, ExtraInchiReturnValues())
-                                    if (generateInChIKey && inchi.isNotEmpty()) {
-                                        inchiKey = RDKFuncs.InchiToInchiKey(inchi)
-                                    }
+                        RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                            synchronized(INCHI_LOCK) {
+                                inchi = RDKFuncs.MolToInchi(mol, ExtraInchiReturnValues())
+                                if (generateInChIKey && inchi.isNotEmpty()) {
+                                    inchiKey = RDKFuncs.InchiToInchiKey(inchi)
                                 }
                             }
-                        } finally {
-                            mol?.delete()
                         }
                     }
 

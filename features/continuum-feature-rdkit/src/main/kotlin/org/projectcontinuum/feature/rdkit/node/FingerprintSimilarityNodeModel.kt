@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -243,16 +244,9 @@ class FingerprintSimilarityNodeModel : ProcessNodeModel() {
 
                     var similarityResult: Any = ""
                     if (smilesValue1.isNotEmpty() && smilesValue2.isNotEmpty()) {
-                        val mol1 = RDKFuncs.SmilesToMol(smilesValue1)
-                        val mol2 = RDKFuncs.SmilesToMol(smilesValue2)
-                        try {
-                            if (mol1 != null && mol2 != null) {
-                                similarityResult = computeSimilarity(mol1, mol2, fingerprintType, similarityMetric, numBits, radius)
-                            }
-                        } finally {
-                            mol1?.delete()
-                            mol2?.delete()
-                        }
+                        similarityResult = RDKitNodeHelper.withTwoMolecules(smilesValue1, smilesValue2) { mol1, mol2 ->
+                            computeSimilarity(mol1, mol2, fingerprintType, similarityMetric, numBits, radius)
+                        } ?: ""
                     }
 
                     // Build output row: all original columns plus similarity column

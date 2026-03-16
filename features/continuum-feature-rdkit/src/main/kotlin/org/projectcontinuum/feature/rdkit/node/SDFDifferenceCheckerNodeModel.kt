@@ -282,68 +282,71 @@ class SDFDifferenceCheckerNodeModel : ProcessNodeModel() {
                         differences.add("No corresponding row in left table")
                     }
                     leftRow != null && rightRow != null -> {
-                        // Compare canonical SMILES
+                        // Compare canonical SMILES using memory-safe helpers
                         var leftCanonical = ""
                         var rightCanonical = ""
-                        var leftMol: ROMol? = null
-                        var rightMol: ROMol? = null
 
-                        try {
-                            if (leftSmiles.isNotEmpty()) {
-                                leftMol = parseMolecule(leftSmiles)
-                                if (leftMol != null) leftCanonical = RDKFuncs.MolToSmiles(leftMol)
-                            }
-                            if (rightSmiles.isNotEmpty()) {
-                                rightMol = parseMolecule(rightSmiles)
-                                if (rightMol != null) rightCanonical = RDKFuncs.MolToSmiles(rightMol)
-                            }
+                        if (leftSmiles.isNotEmpty()) {
+                            leftCanonical = RDKitNodeHelper.withMoleculeOrMolBlock(leftSmiles) { mol ->
+                                RDKFuncs.MolToSmiles(mol)
+                            } ?: ""
+                        }
+                        if (rightSmiles.isNotEmpty()) {
+                            rightCanonical = RDKitNodeHelper.withMoleculeOrMolBlock(rightSmiles) { mol ->
+                                RDKFuncs.MolToSmiles(mol)
+                            } ?: ""
+                        }
 
-                            if (leftCanonical != rightCanonical) {
-                                differences.add("SMILES differ: $leftCanonical vs $rightCanonical")
-                            }
+                        if (leftCanonical != rightCanonical) {
+                            differences.add("SMILES differ: $leftCanonical vs $rightCanonical")
+                        }
 
-                            // Compare properties
-                            if (compareProperties && leftMol != null && rightMol != null) {
-                                val leftMW = RDKFuncs.calcAMW(leftMol, false)
-                                val rightMW = RDKFuncs.calcAMW(rightMol, false)
-                                if (Math.abs(leftMW - rightMW) > 0.01) {
-                                    differences.add("MW differ: %.2f vs %.2f".format(leftMW, rightMW))
+                        // Compare properties
+                        if (compareProperties && leftSmiles.isNotEmpty() && rightSmiles.isNotEmpty()) {
+                            RDKitNodeHelper.withMoleculeOrMolBlock(leftSmiles) { leftMol ->
+                                RDKitNodeHelper.withMoleculeOrMolBlock(rightSmiles) { rightMol ->
+                                    val leftMW = RDKFuncs.calcAMW(leftMol, false)
+                                    val rightMW = RDKFuncs.calcAMW(rightMol, false)
+                                    if (Math.abs(leftMW - rightMW) > 0.01) {
+                                        differences.add("MW differ: %.2f vs %.2f".format(leftMW, rightMW))
+                                    }
+
+                                    val leftFormula = RDKFuncs.getMolFormula(leftMol)
+                                    val rightFormula = RDKFuncs.getMolFormula(rightMol)
+                                    if (leftFormula != rightFormula) {
+                                        differences.add("Formula differ: $leftFormula vs $rightFormula")
+                                    }
                                 }
-
-                                val leftFormula = RDKFuncs.getMolFormula(leftMol)
-                                val rightFormula = RDKFuncs.getMolFormula(rightMol)
-                                if (leftFormula != rightFormula) {
-                                    differences.add("Formula differ: $leftFormula vs $rightFormula")
-                                }
                             }
+                        }
 
-                            // Compare coordinates
-                            if (compareCoordinates && leftMol != null && rightMol != null) {
-                                if (leftMol.getNumConformers() > 0 && rightMol.getNumConformers() > 0) {
-                                    val leftConf = leftMol.getConformer(0)
-                                    val rightConf = rightMol.getConformer(0)
-                                    val numAtoms = minOf(leftMol.getNumAtoms(), rightMol.getNumAtoms()).toInt()
+                        // Compare coordinates
+                        if (compareCoordinates && leftSmiles.isNotEmpty() && rightSmiles.isNotEmpty()) {
+                            RDKitNodeHelper.withMoleculeOrMolBlock(leftSmiles) { leftMol ->
+                                RDKitNodeHelper.withMoleculeOrMolBlock(rightSmiles) { rightMol ->
+                                    if (leftMol.getNumConformers() > 0 && rightMol.getNumConformers() > 0) {
+                                        val leftConf = leftMol.getConformer(0)
+                                        val rightConf = rightMol.getConformer(0)
+                                        val numAtoms = minOf(leftMol.getNumAtoms(), rightMol.getNumAtoms()).toInt()
 
-                                    for (atomIdx in 0 until numAtoms) {
-                                        val leftPos = leftConf.getAtomPos(atomIdx.toLong())
-                                        val rightPos = rightConf.getAtomPos(atomIdx.toLong())
-                                        val dx = leftPos.x - rightPos.x
-                                        val dy = leftPos.y - rightPos.y
-                                        val dz = leftPos.z - rightPos.z
-                                        val dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
-                                        if (dist > toleranceForCoordinates) {
-                                            differences.add("Atom $atomIdx coordinates differ by %.4f".format(dist))
+                                        for (atomIdx in 0 until numAtoms) {
+                                            val leftPos = leftConf.getAtomPos(atomIdx.toLong())
+                                            val rightPos = rightConf.getAtomPos(atomIdx.toLong())
+                                            val dx = leftPos.x - rightPos.x
+                                            val dy = leftPos.y - rightPos.y
+                                            val dz = leftPos.z - rightPos.z
+                                            val dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+                                            if (dist > toleranceForCoordinates) {
+                                                differences.add("Atom $atomIdx coordinates differ by %.4f".format(dist))
+                                            }
+                                        }
+                                    } else {
+                                        if (leftMol.getNumConformers() == 0L || rightMol.getNumConformers() == 0L) {
+                                            differences.add("Coordinate comparison requested but one or both molecules lack conformers")
                                         }
                                     }
-                                } else {
-                                    if (leftMol.getNumConformers() == 0L || rightMol.getNumConformers() == 0L) {
-                                        differences.add("Coordinate comparison requested but one or both molecules lack conformers")
-                                    }
                                 }
                             }
-                        } finally {
-                            leftMol?.delete()
-                            rightMol?.delete()
                         }
 
                         matchStatus = if (differences.isEmpty()) "match" else "mismatch"
@@ -385,18 +388,8 @@ class SDFDifferenceCheckerNodeModel : ProcessNodeModel() {
         nodeProgressCallback.report(100)
         LOGGER.info("SDF Difference Checker completed")
     }
-
-    /**
-     * Parses a molecule from SMILES or MolBlock format.
-     * Tries SMILES first, falls back to MolBlock if it looks like SDF format.
-     */
-    private fun parseMolecule(input: String): ROMol? {
-        return if (input.contains("V2000") || input.contains("V3000") || input.contains("M  END")) {
-            RDKFuncs.MolBlockToMol(input)
-        } else {
-            RDKitNodeHelper.parseMoleculeOrNull(input)
-        }
-    }
 }
+
+
 
 

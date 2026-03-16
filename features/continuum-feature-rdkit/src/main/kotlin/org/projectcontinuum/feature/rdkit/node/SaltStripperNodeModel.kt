@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -189,42 +190,37 @@ class SaltStripperNodeModel : ProcessNodeModel() {
                     // Parse SMILES, strip salts, and convert back to SMILES
                     var resultSmiles = ""
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
-                        try {
-                            if (mol != null) {
-                                if (keepLargestFragmentOnly) {
-                                    val fragments = RDKFuncs.getMolFrags(mol)
-                                    try {
-                                        if (fragments.size().toInt() > 1) {
-                                            // Find the largest fragment by heavy atom count
-                                            var largestIdx = 0
-                                            var maxAtoms = 0L
-                                            for (i in 0 until fragments.size().toInt()) {
-                                                val fragAtoms = fragments[i].getNumHeavyAtoms()
-                                                if (fragAtoms > maxAtoms) {
-                                                    maxAtoms = fragAtoms
-                                                    largestIdx = i
-                                                }
-                                            }
-                                            resultSmiles = RDKFuncs.MolToSmiles(fragments[largestIdx])
-                                        } else {
-                                            // Single fragment — just canonicalize
-                                            resultSmiles = RDKFuncs.MolToSmiles(mol)
-                                        }
-                                    } finally {
+                        resultSmiles = RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                            if (keepLargestFragmentOnly) {
+                                val fragments = RDKFuncs.getMolFrags(mol)
+                                try {
+                                    if (fragments.size().toInt() > 1) {
+                                        // Find the largest fragment by heavy atom count
+                                        var largestIdx = 0
+                                        var maxAtoms = 0L
                                         for (i in 0 until fragments.size().toInt()) {
-                                            fragments[i]?.delete()
+                                            val fragAtoms = fragments[i].getNumHeavyAtoms()
+                                            if (fragAtoms > maxAtoms) {
+                                                maxAtoms = fragAtoms
+                                                largestIdx = i
+                                            }
                                         }
-                                        fragments.delete()
+                                        RDKFuncs.MolToSmiles(fragments[largestIdx])
+                                    } else {
+                                        // Single fragment — just canonicalize
+                                        RDKFuncs.MolToSmiles(mol)
                                     }
-                                } else {
-                                    // No stripping — just canonicalize
-                                    resultSmiles = RDKFuncs.MolToSmiles(mol)
+                                } finally {
+                                    for (i in 0 until fragments.size().toInt()) {
+                                        fragments[i]?.delete()
+                                    }
+                                    fragments.delete()
                                 }
+                            } else {
+                                // No stripping — just canonicalize
+                                RDKFuncs.MolToSmiles(mol)
                             }
-                        } finally {
-                            mol?.delete()
-                        }
+                        } ?: ""
                     }
 
                     // Build output row: all original columns plus result column

@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -178,17 +179,16 @@ class MoleculeSubstructFilterNodeModel : ProcessNodeModel() {
             message = "Input port 'queries' is not connected"
         )
 
-        // === Read ALL queries first ===
-        val queryMols = mutableListOf<ROMol>()
-        try {
+        // === Read ALL queries first using memory-safe helper ===
+        RDKitNodeHelper.withMoleculeList { queryMols ->
             queriesReader.use { reader ->
                 var row = reader.read()
                 while (row != null) {
                     val querySmilesValue = row[querySmilesColumn]?.toString() ?: ""
                     if (querySmilesValue.isNotEmpty()) {
                         // Try SMARTS first (for substructure queries), fall back to SMILES
-                        val queryMol = RDKFuncs.SmartsToMol(querySmilesValue)
-                            ?: RDKFuncs.SmilesToMol(querySmilesValue)
+                        val queryMol = RDKitNodeHelper.parseSmartsOrNull(querySmilesValue)
+                            ?: RDKitNodeHelper.parseMoleculeOrNull(querySmilesValue)
                         if (queryMol != null) {
                             queryMols.add(queryMol)
                         }
@@ -217,17 +217,12 @@ class MoleculeSubstructFilterNodeModel : ProcessNodeModel() {
                         var matched = false
 
                         if (smilesValue.isNotEmpty() && queryMols.isNotEmpty()) {
-                            val mol = RDKFuncs.SmilesToMol(smilesValue)
-                            if (mol != null) {
-                                try {
-                                    matched = when (matchMode) {
-                                        "all" -> queryMols.all { query -> mol.hasSubstructMatch(query) }
-                                        else -> queryMols.any { query -> mol.hasSubstructMatch(query) }
-                                    }
-                                } finally {
-                                    mol.delete()
+                            matched = RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                                when (matchMode) {
+                                    "all" -> queryMols.all { query -> mol.hasSubstructMatch(query) }
+                                    else -> queryMols.any { query -> mol.hasSubstructMatch(query) }
                                 }
-                            }
+                            } ?: false
                         }
 
                         if (matched) {
@@ -244,11 +239,6 @@ class MoleculeSubstructFilterNodeModel : ProcessNodeModel() {
             } finally {
                 matchWriter.close()
                 noMatchWriter.close()
-            }
-        } finally {
-            // === Clean up query molecules ===
-            for (queryMol in queryMols) {
-                queryMol.delete()
             }
         }
 

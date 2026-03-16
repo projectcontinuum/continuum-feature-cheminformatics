@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -191,39 +192,41 @@ class MoleculeExtractorNodeModel : ProcessNodeModel() {
                     val smilesValue = row[smilesColumn]?.toString() ?: ""
 
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
-                        try {
-                            if (mol != null) {
-                                val fragments = RDKFuncs.getMolFrags(mol)
-                                try {
-                                    val fragCount = fragments.size().toInt()
-                                    for (i in 0 until fragCount) {
-                                        val fragSmiles = RDKFuncs.MolToSmiles(fragments[i])
-
-                                        val outputRow = row.toMutableMap<String, Any>()
-                                        outputRow[newColumnName] = fragSmiles
-                                        outputRow[fragmentIdColumnName] = i
-
-                                        writer.write(outputRowNumber, outputRow)
-                                        outputRowNumber++
-                                    }
-                                } finally {
-                                    for (i in 0 until fragments.size().toInt()) {
-                                        fragments[i]?.delete()
-                                    }
-                                    fragments.delete()
+                        val fragResult = RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                            val fragments = RDKFuncs.getMolFrags(mol)
+                            try {
+                                val fragCount = fragments.size().toInt()
+                                val fragRows = mutableListOf<Pair<String, Int>>()
+                                for (i in 0 until fragCount) {
+                                    val fragSmiles = RDKFuncs.MolToSmiles(fragments[i])
+                                    fragRows.add(Pair(fragSmiles, i))
                                 }
-                            } else {
-                                // Invalid SMILES — write one row with empty fragment
+                                fragRows
+                            } finally {
+                                for (i in 0 until fragments.size().toInt()) {
+                                    fragments[i]?.delete()
+                                }
+                                fragments.delete()
+                            }
+                        }
+
+                        if (fragResult != null && fragResult.isNotEmpty()) {
+                            for ((fragSmiles, fragIdx) in fragResult) {
                                 val outputRow = row.toMutableMap<String, Any>()
-                                outputRow[newColumnName] = ""
-                                outputRow[fragmentIdColumnName] = 0
+                                outputRow[newColumnName] = fragSmiles
+                                outputRow[fragmentIdColumnName] = fragIdx
 
                                 writer.write(outputRowNumber, outputRow)
                                 outputRowNumber++
                             }
-                        } finally {
-                            mol?.delete()
+                        } else {
+                            // Invalid SMILES — write one row with empty fragment
+                            val outputRow = row.toMutableMap<String, Any>()
+                            outputRow[newColumnName] = ""
+                            outputRow[fragmentIdColumnName] = 0
+
+                            writer.write(outputRowNumber, outputRow)
+                            outputRowNumber++
                         }
                     } else {
                         // Empty SMILES — write one row with empty fragment

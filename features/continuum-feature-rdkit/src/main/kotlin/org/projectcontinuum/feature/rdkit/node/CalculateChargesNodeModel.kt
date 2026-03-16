@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -160,7 +161,7 @@ class CalculateChargesNodeModel : ProcessNodeModel() {
                     // Parse SMILES, compute Gasteiger charges, and serialize as JSON array
                     var chargesJson = ""
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
+                        val mol = RDKitNodeHelper.parseMoleculeOrNull(smilesValue)
                         try {
                             if (mol != null) {
                                 mol.computeGasteigerCharges()

@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -191,24 +192,19 @@ class MurckoScaffoldNodeModel : ProcessNodeModel() {
                     // Parse SMILES, compute Murcko scaffold, and convert back to SMILES
                     var scaffoldSmiles = ""
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
-                        try {
-                            if (mol != null) {
-                                val scaffold = RDKFuncs.MurckoDecompose(mol)
-                                try {
-                                    if (scaffold != null && scaffold.numAtoms.toInt() > 0) {
-                                        if (makeGenericFramework) {
-                                            LOGGER.warn("Generic framework generation is not supported in this version; returning standard Murcko scaffold instead")
-                                        }
-                                        scaffoldSmiles = RDKFuncs.MolToSmiles(scaffold)
+                        scaffoldSmiles = RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                            val scaffold = RDKFuncs.MurckoDecompose(mol)
+                            try {
+                                if (scaffold != null && scaffold.numAtoms.toInt() > 0) {
+                                    if (makeGenericFramework) {
+                                        LOGGER.warn("Generic framework generation is not supported in this version; returning standard Murcko scaffold instead")
                                     }
-                                } finally {
-                                    scaffold?.delete()
-                                }
+                                    RDKFuncs.MolToSmiles(scaffold)
+                                } else ""
+                            } finally {
+                                scaffold?.delete()
                             }
-                        } finally {
-                            mol?.delete()
-                        }
+                        } ?: ""
                     }
 
                     // Build output row: all original columns plus scaffold column

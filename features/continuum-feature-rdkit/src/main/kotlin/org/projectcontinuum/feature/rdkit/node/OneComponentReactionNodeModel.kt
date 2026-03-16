@@ -252,7 +252,7 @@ class OneComponentReactionNodeModel : ProcessNodeModel() {
                     while (row != null) {
                         val smilesValue = row[reactantSmilesColumn]?.toString() ?: ""
                         if (smilesValue.isNotEmpty()) {
-                            val mol = RDKFuncs.SmilesToMol(smilesValue)
+                            val mol = RDKitNodeHelper.parseMoleculeOrNull(smilesValue)
                             if (mol != null) {
                                 try {
                                     for (reaction in reactions) {

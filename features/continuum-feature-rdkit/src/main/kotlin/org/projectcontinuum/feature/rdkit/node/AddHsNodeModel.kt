@@ -7,6 +7,7 @@ import org.projectcontinuum.core.commons.node.ProcessNodeModel
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -173,15 +174,14 @@ class AddHsNodeModel : ProcessNodeModel() {
                     // Parse SMILES, add hydrogens, and convert back to SMILES
                     var smilesWithHs = ""
                     if (smilesValue.isNotEmpty()) {
-                        val mol = RDKFuncs.SmilesToMol(smilesValue)
-                        try {
-                            if (mol != null) {
-                                RDKFuncs.addHs(mol)
-                                smilesWithHs = RDKFuncs.MolToSmiles(mol)
+                        smilesWithHs = RDKitNodeHelper.withMolecule(smilesValue) { mol ->
+                            val molWithHs = RDKFuncs.addHs(mol)
+                            try {
+                                RDKFuncs.MolToSmiles(molWithHs)
+                            } finally {
+                                molWithHs.delete()
                             }
-                        } finally {
-                            mol?.delete()
-                        }
+                        } ?: ""
                     }
 
                     // Build output row: all original columns plus SMILES with Hs column
