@@ -7,7 +7,7 @@ description = "Continuum Feature Example — a sample feature module with a Hell
 version = "0.0.1"
 
 continuum {
-    continuumVersion.set("0.0.6")
+    continuumVersion.set("0.0.7")
 }
 
 dependencies {
