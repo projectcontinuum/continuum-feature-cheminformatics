@@ -59,9 +59,8 @@ class RDKit2SVGNodeModelTest {
     @Test
     fun `test categories are correctly defined`() {
         val categories = nodeModel.categories
-        assertEquals(2, categories.size)
-        assertEquals("RDKit", categories[0])
-        assertEquals("Rendering", categories[1])
+        assertEquals(1, categories.size)
+        assertEquals("RDKit/Rendering", categories[0])
     }
 
     // ===== Port Tests =====

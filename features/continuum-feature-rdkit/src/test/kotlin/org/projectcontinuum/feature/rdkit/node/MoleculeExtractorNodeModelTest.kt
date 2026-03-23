@@ -55,9 +55,8 @@ class MoleculeExtractorNodeModelTest {
     @Test
     fun `test categories are correctly defined`() {
         val categories = nodeModel.categories
-        assertEquals(2, categories.size)
-        assertEquals("RDKit", categories[0])
-        assertEquals("Fragments", categories[1])
+        assertEquals(1, categories.size)
+        assertEquals("RDKit/Fragments", categories[0])
     }
 
     // ===== Port Tests =====
