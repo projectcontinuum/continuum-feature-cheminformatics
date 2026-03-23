@@ -75,9 +75,8 @@ class SmilesParserNodeModelTest {
     @Test
     fun `test categories are correctly defined`() {
         val categories = nodeModel.categories
-        assertEquals(2, categories.size)
-        assertEquals("RDKit", categories[0])
-        assertEquals("Converters", categories[1])
+        assertEquals(1, categories.size)
+        assertEquals("RDKit/Converters", categories[0])
     }
 
     @Test

@@ -58,9 +58,8 @@ class CalculateChargesNodeModelTest {
     @Test
     fun `test categories are correctly defined`() {
         val categories = nodeModel.categories
-        assertEquals(2, categories.size)
-        assertEquals("RDKit", categories[0])
-        assertEquals("Calculators", categories[1])
+        assertEquals(1, categories.size)
+        assertEquals("RDKit/Calculators", categories[0])
     }
 
     // ===== Port Tests =====

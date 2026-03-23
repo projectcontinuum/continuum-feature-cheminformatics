@@ -56,9 +56,8 @@ class SubstructureCounterNodeModelTest {
     @Test
     fun `test categories are correctly defined`() {
         val categories = nodeModel.categories
-        assertEquals(2, categories.size)
-        assertEquals("RDKit", categories[0])
-        assertEquals("Searching", categories[1])
+        assertEquals(1, categories.size)
+        assertEquals("RDKit/Searching", categories[0])
     }
 
     // ===== Port Tests =====

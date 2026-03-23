@@ -57,9 +57,8 @@ class DiversityPickerNodeModelTest {
     @Test
     fun `test categories are correctly defined`() {
         val categories = nodeModel.categories
-        assertEquals(2, categories.size)
-        assertEquals("RDKit", categories[0])
-        assertEquals("Fingerprints", categories[1])
+        assertEquals(1, categories.size)
+        assertEquals("RDKit/Fingerprints", categories[0])
     }
 
     // ===== Port Tests =====
