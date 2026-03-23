@@ -4,7 +4,7 @@ plugins {
 
 group = "org.projectcontinuum.feature.example"
 description = "Continuum Feature Example — a sample feature module with a Hello World node"
-version = "0.0.2"
+version = property("featureVersion").toString()
 
 val continuumPlatformVersion = property("continuumPlatformVersion").toString()
 
