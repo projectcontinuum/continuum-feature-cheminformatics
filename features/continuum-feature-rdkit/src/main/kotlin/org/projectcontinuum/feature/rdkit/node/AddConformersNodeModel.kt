@@ -8,8 +8,8 @@ import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
 import org.projectcontinuum.feature.rdkit.util.RDKitNodeHelper
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE
 import org.RDKit.*
@@ -41,10 +41,11 @@ import org.RDKit.*
  * @see ProcessNodeModel
  */
 @ContinuumNode
-class AddConformersNodeModel : ProcessNodeModel() {
+class AddConformersNodeModel(
+  private val objectMapper: ObjectMapper
+) : ProcessNodeModel() {
     companion object {
         private val LOGGER = LoggerFactory.getLogger(AddConformersNodeModel::class.java)
-        private val objectMapper = ObjectMapper()
     }
 
     final override val inputPorts = mapOf(

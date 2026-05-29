@@ -5,8 +5,9 @@ import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter.OutputPortWriter
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -33,7 +34,7 @@ class CountBasedFingerprintNodeModelTest {
 
     @BeforeEach
     fun setUp() {
-        nodeModel = CountBasedFingerprintNodeModel()
+        nodeModel = CountBasedFingerprintNodeModel(jacksonObjectMapper())
         mockInputReader = mock()
         mockOutputWriter = mock()
         mockPortWriter = mock()

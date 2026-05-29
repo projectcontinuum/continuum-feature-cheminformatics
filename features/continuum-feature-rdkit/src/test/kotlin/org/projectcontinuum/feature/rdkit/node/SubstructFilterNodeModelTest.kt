@@ -5,6 +5,7 @@ import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter.OutputPortWriter
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -31,7 +32,7 @@ class SubstructFilterNodeModelTest {
 
     @BeforeEach
     fun setUp() {
-        nodeModel = SubstructFilterNodeModel()
+        nodeModel = SubstructFilterNodeModel(jacksonObjectMapper())
         mockInputReader = mock()
         mockOutputWriter = mock()
         mockMatchWriter = mock()
