@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="FeatureCheminsformatics" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" folderName="Features">
+    <envs>
+      <env name="CONTINUUM_NODE_TASK_QUEUE" value="FEATURE-CHEMINFORMATICS-TASK-QUEUE" />
+    </envs>
+    <module name="continuum-feature-cheminformatics.worker.main" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="org.projectcontinuum.feature.cheminformatics.worker.App" />
+    <option name="VM_PARAMETERS" value="-Dserver.port=5052" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
