@@ -33,7 +33,7 @@ class RDKitTestExtension : BeforeAllCallback {
         }
     }
 
-    override fun beforeAll(context: ExtensionContext?) {
+    override fun beforeAll(context: ExtensionContext) {
         if (loaded) return
         synchronized(lock) {
             if (loaded) return

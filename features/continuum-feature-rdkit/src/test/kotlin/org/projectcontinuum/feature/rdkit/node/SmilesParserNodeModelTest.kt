@@ -4,6 +4,7 @@ import org.projectcontinuum.core.commons.exception.NodeRuntimeException
 import org.projectcontinuum.core.commons.protocol.progress.NodeProgressCallback
 import org.projectcontinuum.core.commons.utils.NodeInputReader
 import org.projectcontinuum.core.commons.utils.NodeOutputWriter
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -31,7 +32,7 @@ class SmilesParserNodeModelTest {
 
     @BeforeEach
     fun setUp() {
-        nodeModel = SmilesParserNodeModel()
+        nodeModel = SmilesParserNodeModel(jacksonObjectMapper())
         mockInputReader = mock()
         mockOutputWriter = mock()
         mockOutputPortWriter = mock()

@@ -1,5 +1,6 @@
 package org.projectcontinuum.feature.rdkit.node
 
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -25,7 +26,7 @@ class KekulizeNodeModelTest {
 
     @BeforeEach
     fun setUp() {
-        nodeModel = KekulizeNodeModel()
+        nodeModel = KekulizeNodeModel(jacksonObjectMapper())
         mockInputReader = mock()
         mockOutputWriter = mock()
         mockPortWriter = mock()
